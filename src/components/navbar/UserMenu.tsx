@@ -19,7 +19,7 @@ import useRentModal from "../../hooks/useRentModal";
 import axiosClient from "../../utils/axios-client";
 
 interface UserMenuProps {
-    currentUser?: Object | null
+    currentUser?: Object | any
 }
 
 const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
@@ -75,6 +75,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                 <div className='flex flex-col cursor-pointer'>
                   { currentUser ? (
                   <>
+                      <MenuItem label={currentUser?.email}/>
                       <MenuItem onClick={() => navigate("/trips")} label="My trips"/>
                       <MenuItem onClick={() => navigate("/favorites")} label="My favorites"/>
                       <MenuItem onClick={() => navigate("/reservations")} label="My reservations"/>

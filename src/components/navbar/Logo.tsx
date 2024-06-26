@@ -7,7 +7,7 @@ const Logo = () => {
         onClick={() => navigate('/')}
         alt="Logo"
         className="hidden md:block cursor-pointer"
-        width="100"
+        width="125"
         src="/images/logo.png"
     />
   )

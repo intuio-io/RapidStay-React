@@ -9,6 +9,9 @@ import useCountries from "../../hooks/useCountries";
 import HeartButton from "../HeartButton";
 import Button from "../Button";
 
+// utils
+import { formatString } from "../../utils/formatString";
+
 interface ListingCardProps {
     data: any;
     reservation?: any;
@@ -65,14 +68,22 @@ const ListingCard: React.FC<ListingCardProps> = ({data, reservation, onAction, d
            </div>
        </div>
        <div className='font-semibold text-lg'>
-           {location?.region}, {location?.label}
+         {formatString(data?.title, 24)}
        </div>
+
+
+       {reservation?.user &&       
+        <div className='text-neutral-500'>
+            {reservation.user.email}
+       </div>
+       }
+
        <div className='font-light text-neutral-500'>
-           {reservationDate || data.category}
+            {data?.locationValue?.region}, {location?.label} | {reservationDate || data.category}
        </div>
        <div className='flex flex-row items-center gap-1'>
            <div className='font-semibold'>
-            $ {price}
+            ${price}
            </div>
            {!reservation && (
                <div className='font-light'>night</div>

@@ -1,4 +1,6 @@
-import  { useState, useEffect} from 'react'
+import  { useState, useCallback, useEffect} from 'react'
+import Pusher from 'pusher-js'
+import { io } from 'socket.io-client';
 
 // components
 import EmptyState from '../components/EmptyState'
@@ -7,7 +9,6 @@ import ListingLoader from '../components/listings/ListingLoader'
 
 // hooks
 import useHomeStore from '../store/homeStore'
-import useSocket from '../hooks/useSocket'
 
 // actions
 import { getListings } from '../store/actions/listingActions'
@@ -18,26 +19,52 @@ const Properties = () => {
   const [listings, setListings] = useState([]);
   const [isLoadingFinished, setIsLoadingFinished] = useState(false);
   const loadingTime = Number(import.meta.env.VITE_LOADING_TIME) || 1000;
-  const socket = useSocket(import.meta.env.VITE_API_BASE_URL);
+
+  const fetchDetails = useCallback(async () => {
+    const params = {userId: user.id}
+    const data = await getListings({setLoading, params});
+    setListings(data);
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    fetchDetails();
+  }, [user, fetchDetails])
 
   useEffect(() => {
     if(!user) return;
 
-    const fetchDetails = async () => {
-        const params = {userId: user.id}
-        const data = await getListings({setLoading, params});
-        setListings(data);
+    if (import.meta.env.VITE_SOCKET_TYPE === 'ExpressSocket') {
+      const socket = io(import.meta.env.VITE_API_BASE_URL);
+      socket.on("listingsDeleted", () => fetchDetails());
+      return () => {
+        socket.off('listingsDeleted');
+        socket.disconnect();
       }
-  
-      fetchDetails();
+    }
+  }, [fetchDetails, user]);
 
-      if (socket) socket.on("listingsDeleted", () => fetchDetails());
+  useEffect(() => {
+    if (!user) return;
 
-      return () =>  {socket && socket.off('listingsDeleted');}
-}, [user, socket]);
+    if (import.meta.env.VITE_SOCKET_TYPE === 'LaravelPusher') {
+      const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
+        cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+      });
 
-        // just to give the loader a cool effect
-        useEffect(() => {
+      const channel = pusher.subscribe('listing-channel');
+      channel.bind('listingsDeleted', () => fetchDetails());
+
+      return () => {
+        channel.unbind_all();
+        channel.unsubscribe();
+      };
+    }
+  }, [fetchDetails, user]);
+
+   // just to give the loader a cool effect
+    useEffect(() => {
           if (!loading) {
             const timeout = setTimeout(() => {
               setIsLoadingFinished(true);

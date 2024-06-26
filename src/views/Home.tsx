@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useSearchParams } from "react-router-dom"
 import { GoogleMap, OverlayView, OverlayViewF, useLoadScript } from '@react-google-maps/api';
+import Pusher from "pusher-js";
+import { io } from 'socket.io-client';
 
 // components
 import EmptyState from "../components/EmptyState";
@@ -15,7 +17,7 @@ import { getListings } from "../store/actions/listingActions";
 
 // hooks
 import useHomeStore from "../store/homeStore";
-import useSocket from "../hooks/useSocket";
+
 
   const Home = () => {
     const { user, location } = useHomeStore();
@@ -25,7 +27,6 @@ import useSocket from "../hooks/useSocket";
     const [isEmpty, setIsEmpty] = useState(true);
     const [isLoadingFinished, setIsLoadingFinished] = useState(false);
     const loadingTime = Number(import.meta.env.VITE_LOADING_TIME) || 1000;
-    const socket = useSocket(import.meta.env.VITE_API_BASE_URL);
 
     const { isLoaded } = useLoadScript({ googleMapsApiKey: import.meta.env.VITE_GEOLOCATION_API_KEY || '' });
 
@@ -39,6 +40,13 @@ import useSocket from "../hooks/useSocket";
 
     const mapRef = useRef<any>(null);  
 
+    const fetchDetails = useCallback(async () => {
+      const params = Object.fromEntries(searchParams.entries())
+      const listings = await getListings({setLoading, params});
+      setListings(listings);
+      setIsEmpty(!(listings.length > 0));
+    }, [user, searchParams]);
+
     useEffect(() => {
       if (location?.latlng) {
         setMapCenter({ lat: location.latlng[0], lng: location.latlng[1] });
@@ -46,20 +54,39 @@ import useSocket from "../hooks/useSocket";
     }, [location]);
 
     useEffect(() => {
-        const fetchDetails = async () => {
-         const params = Object.fromEntries(searchParams.entries())
-          const listings = await getListings({setLoading, params});
-          setListings(listings);
-    
-          setIsEmpty(!(listings.length > 0));
+      fetchDetails();
+
+    }, [fetchDetails, searchParams, user])
+
+    useEffect(() => {
+      if (import.meta.env.VITE_SOCKET_TYPE === 'ExpressSocket') {
+        const socket = io(import.meta.env.VITE_API_BASE_URL);
+        socket.on("listingsUpdated", () => fetchDetails());
+        return () =>  {
+          socket.off('listingsUpdated');
+          socket.disconnect();
         }
-    
-        fetchDetails();
-    
-        if (socket) socket.on("listingsUpdated", () => fetchDetails());
-    
-        return () =>  {socket && socket.off('listingsUpdated');}
-      }, [searchParams, socket]);
+      }
+    }, [user, fetchDetails]);
+
+
+    useEffect(() => {
+      if (import.meta.env.VITE_SOCKET_TYPE === 'LaravelPusher') {
+        const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
+          cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+        });
+  
+        const channel = pusher.subscribe('listing-channel');
+
+        channel.bind('listingsUpdated', () => fetchDetails());
+  
+        return () => {
+          channel.unbind_all();
+          channel.unsubscribe();
+        };
+      }
+    }, [user, fetchDetails])
+
 
         // just to give the loader a cool effect
         useEffect(() => {

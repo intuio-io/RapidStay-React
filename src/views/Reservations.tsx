@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
+import Pusher from "pusher-js";
+import { io } from 'socket.io-client';
 
 // components
 import EmptyState from "../components/EmptyState"
@@ -7,10 +9,10 @@ import ListingLoader from "../components/listings/ListingLoader"
 
 // hooks
 import useHomeStore from "../store/homeStore"
-import useSocket from '../hooks/useSocket'
 
 // actions
 import { getReservations } from "../store/actions/reservationActions"
+
 
 const Reservations = () => {
   const { user } = useHomeStore();
@@ -18,7 +20,6 @@ const Reservations = () => {
   const [resLoading, setResLoading] = useState<boolean>(false);
   const [isLoadingFinished, setIsLoadingFinished] = useState(false);
   const loadingTime = Number(import.meta.env.VITE_LOADING_TIME) || 1000;
-  const socket = useSocket(import.meta.env.VITE_API_BASE_URL);
 
   const fetchReservations = useCallback(async () => {
     const params = { authorId: user.id };
@@ -26,25 +27,47 @@ const Reservations = () => {
     setReservations(data);
   }, [user]);
 
-    useEffect(() => {
-      if (!user) return;
-  
-      // Initial fetch
-      fetchReservations();
-  
-      // Event listeners setup
-      if (socket) {
-  
-        socket.on("reservationsUpdated", () => fetchReservations());
-        socket.on("reservationsDeleted", () => fetchReservations());
-  
-        // Cleanup function
-        return () => {
-          socket.off('reservationsUpdated');
-          socket.off('reservationsDeleted');
-        };
+  useEffect(() => {
+    if(!user) return;
+
+    fetchReservations();
+  }, [user, fetchReservations])
+
+  useEffect(() => {
+    if (!user) return;
+
+    if (import.meta.env.VITE_SOCKET_TYPE === 'ExpressSocket') {
+      const socket = io(import.meta.env.VITE_API_BASE_URL);
+      socket.on("reservationsUpdated", () => fetchReservations());
+      socket.on("reservationsDeleted", () => fetchReservations());
+      return () => {
+        socket.off("reservationsUpdated")
+        socket.off('reservationsDeleted');
+        socket.disconnect();
       }
-    }, [user, socket, fetchReservations]);
+    }
+  }, [user, fetchReservations])
+
+  useEffect(() => {
+    if (!user) return;
+
+    if (import.meta.env.VITE_SOCKET_TYPE === 'LaravelPusher') {
+      const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
+        cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+      });
+
+      const channel = pusher.subscribe('reservation-channel');
+
+      channel.bind('reservationsUpdated', () => fetchReservations());
+      channel.bind('reservationsDeleted', () => fetchReservations());
+
+      return () => {
+        channel.unbind_all();
+        channel.unsubscribe();
+      };
+    }
+  }, [fetchReservations, user]);
+
 
         // just to give the loader a cool effect
         useEffect(() => {

@@ -1,4 +1,6 @@
-import  { useState, useEffect } from 'react'
+import  { useState, useEffect, useCallback } from 'react'
+import Pusher from 'pusher-js';
+import { io } from 'socket.io-client';
 
 // components
 import TripsClient from '../components/TripsClient'
@@ -7,11 +9,9 @@ import ListingLoader from '../components/listings/ListingLoader'
 
 // hooks
 import useHomeStore from '../store/homeStore'
-import useSocket from '../hooks/useSocket'
 
 // actions
 import { getReservations } from '../store/actions/reservationActions'
-
 
 const Trips = () => {
     const { user } = useHomeStore();
@@ -19,22 +19,52 @@ const Trips = () => {
     const [resLoading, setResLoading] = useState<boolean>(false);
     const [isLoadingFinished, setIsLoadingFinished] = useState(false);
     const loadingTime = Number(import.meta.env.VITE_LOADING_TIME) || 1000;
-    const socket = useSocket(import.meta.env.VITE_API_BASE_URL);
+
+    const fetchReservations = useCallback(async () => {
+      const params = { userId: user.id };
+      const data = await getReservations({ setResLoading, params });
+      setReservations(data);
+    }, [user]);
 
     useEffect(() => {
-        if(!user) return;
-  
-        const fetchReservations = async () => {
-          const params = { userId: user.id }
-          const data = await getReservations({setResLoading, params})
-          setReservations(data);
-       };
-       fetchReservations();
+      if (!user) return;
 
-       if (socket) socket.on("reservationsDeleted", () => fetchReservations());
+      fetchReservations();
+    }, [user, fetchReservations]);
 
-       return () =>  {socket && socket.off('reservationsDeleted');}
-      }, [user, socket])
+
+    useEffect(() => {
+      if (!user) return;
+
+      if (import.meta.env.VITE_SOCKET_TYPE === 'ExpressSocket') {
+        const socket = io(import.meta.env.VITE_API_BASE_URL);
+        socket.on("reservationsDeleted", () => fetchReservations());
+        return () => {
+          socket.off('reservationsDeleted');
+          socket.disconnect();
+        }
+      }
+    }, [fetchReservations, user])
+
+
+  useEffect(() => {
+    if (!user) return;
+
+    if (import.meta.env.VITE_SOCKET_TYPE === 'LaravelPusher') {
+      const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
+        cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+      });
+
+      const channel = pusher.subscribe('reservation-channel');
+
+      channel.bind('reservationsDeleted', () => fetchReservations());
+
+      return () => {
+        channel.unbind_all();
+        channel.unsubscribe();
+      };
+    }
+  }, [fetchReservations, user]);
 
         // just to give the loader a cool effect
         useEffect(() => {
