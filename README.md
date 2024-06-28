@@ -71,3 +71,8 @@ Follow the instructions to get credentials for cloudinary: [Cloudinary generate 
    ```
 
 You're all set! The project should now be running on your local server.
+
+## You have now successfully setup your frontend. Now proceed on setting up a backend of your choice.
+
+- Express : https://github.com/intuio-io/rapidstay-express
+- Laravel : https://github.com/intuio-io/rapidstay-laravel

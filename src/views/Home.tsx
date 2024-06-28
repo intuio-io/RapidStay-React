@@ -27,7 +27,7 @@ import useHomeStore from "../store/homeStore";
     const [isEmpty, setIsEmpty] = useState(true);
     const [isLoadingFinished, setIsLoadingFinished] = useState(false);
     const loadingTime = Number(import.meta.env.VITE_LOADING_TIME) || 1000;
-
+    
     const { isLoaded } = useLoadScript({ googleMapsApiKey: import.meta.env.VITE_GEOLOCATION_API_KEY || '' });
 
     const [searchParams] = useSearchParams();
@@ -37,6 +37,7 @@ import useHomeStore from "../store/homeStore";
     const [showPopup, setShowPopup] = useState(false);
     const [mapBounds, setMapBounds] = useState<any>(null);
     const [listingId, setListingId] = useState<string>("");
+    const [currentZoom, setCurrentZoom] = useState<number>(10); 
 
     const mapRef = useRef<any>(null);  
 
@@ -100,9 +101,15 @@ import useHomeStore from "../store/homeStore";
         }, [loading]);
 
         useEffect(() => {
-            const currentData = listings.filter((listing) => mapBounds && mapBounds.contains({ lat: listing.locationValue.latlng[0], lng: listing.locationValue.latlng[1] }));
-            setMapListings(currentData);
-        }, [mapBounds])
+          let currentData = listings.filter((listing) => mapBounds && mapBounds.contains({ lat: listing.locationValue.latlng[0], lng: listing.locationValue.latlng[1] }));
+          currentData.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+
+          if (currentZoom < 5)  currentData = currentData.slice(0, 3);
+          else if (currentZoom < 6)  currentData = currentData.slice(0, 6);
+          else if (currentZoom < 7)  currentData = currentData.slice(0, 8);
+        
+          setMapListings(currentData);
+        }, [mapBounds, currentZoom]);
 
         if(loading || !isLoadingFinished) {
             return ( <ListingLoader count={9}/> )
@@ -115,6 +122,7 @@ import useHomeStore from "../store/homeStore";
           const handleBoundsChanged = () => {
             if (mapRef.current) {
               setMapBounds(mapRef.current.getBounds());
+              setCurrentZoom(mapRef.current.getZoom()); // Update the zoom level
             }
           };
         
@@ -155,7 +163,7 @@ import useHomeStore from "../store/homeStore";
                   onLoad={(map: any) => mapRef.current = map}
                   mapTypeId='roadmap' // Set the map type to satellite
                 >
-              {listings.map((listing) => {
+              {mapListings.map((listing) => {
                 return (
                 <OverlayViewF
                   key={listing.id}
