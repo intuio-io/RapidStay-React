@@ -1,5 +1,5 @@
 import React from "react";
-import { useMemo, useState, useEffect, Suspense } from "react"
+import { useMemo, useState, useEffect, Suspense, useCallback } from "react"
 import { FieldValues, SubmitHandler, useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 
@@ -76,7 +76,7 @@ const RentModal = () => {
     }
 
     const onBack = () => {
-        setStep((value) => value - 1)
+        setStep((value) => value - 1);
     }
 
     const onNext = () => {
@@ -113,6 +113,12 @@ const RentModal = () => {
            .finally(() => setIsLoading(false));
     };
 
+    const onClose = useCallback(() => {
+        reset();
+        setStep(STEPS.CATEGORY);
+        rentModal.onClose();
+    }, [])
+
     const actionLabel = useMemo(() => {
         if (step === STEPS.PRICE) {
             return "Create"
@@ -127,7 +133,7 @@ const RentModal = () => {
             return undefined;
         }
 
-        return 'BACK';
+        return 'Back';
     }, [step])
 
     let bodyContent = (
@@ -231,12 +237,12 @@ const RentModal = () => {
   return (
     <Modal 
         isOpen={rentModal.isOpen}
-        onClose={rentModal.onClose}
+        onClose={onClose}
         onSubmit={handleSubmit(onSubmit)}
         actionLabel={actionLabel}
         secondaryActionLabel={secondaryActionLabel}
         secondaryAction={step === STEPS.CATEGORY ? undefined : onBack}
-        title="Airbnb your home!"
+        title="RapidStay your home!"
         body={bodyContent}
     />
   )

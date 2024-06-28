@@ -34,16 +34,19 @@ const useFavorite = ({listingId, currentUser}: IUserFavorite) => {
 
             if (hasFavorited) {
                 request = axiosClient.delete(`/auth/removeFavorite/${listingId}`)
-                  .then(() => removeFavoriteId(listingId));
+                  .then(({ data }) => {
+                    removeFavoriteId(listingId);
+                    toast.success(data.message);
+                  });
               } else {
                 request = axiosClient.post(`/auth/addFavorite/${listingId}`)
-                  .then(() => addFavoriteId(listingId));
+                  .then(({ data }) => {
+                    addFavoriteId(listingId);
+                    toast.success(data.message);
+                  });
               }
 
             await request;
-
-
-            toast.success('Success');
 
         } catch (error) {
             toast.error("Something went wrong")

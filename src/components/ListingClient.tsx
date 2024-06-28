@@ -65,8 +65,8 @@ const initialDateRange = {
             endDate: dateRange.endDate,
             listingId: listing.id
         })
-        .then(() => {
-            toast.success('Listing reserved');
+        .then(({ data }) => {
+            toast.success(data.message);
             setDateRange(initialDateRange);
             navigate('/trips');
         })

@@ -1,4 +1,4 @@
-# Next.js Project Installation Instructions
+# React Project Installation Instructions
 
 ## Prerequisites
 
