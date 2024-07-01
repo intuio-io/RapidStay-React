@@ -53,13 +53,7 @@ Follow the instructions to get credentials for cloudinary: [Cloudinary generate 
    VITE_SOCKET_TYPE="ExpressSocket"
 
    # Optional if using laravel has a backend
-   VITE_PUSHER_APP_ID="..."
-
-   # Optional if using laravel has a backend
    VITE_PUSHER_APP_KEY="...."
-
-   # Optional if using laravel has a backend
-   VITE_PUSHER_APP_SECRET="...."
 
    # Optional if using laravel has a backend
    VITE_PUSHER_APP_CLUSTER="..."

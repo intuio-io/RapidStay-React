@@ -9,16 +9,21 @@ import Container from './Container';
 import Heading from './Heading';
 import ListingCard from './listings/ListingCard';
 
+// hooks
+import useConfirmModal from '../hooks/useConfirmModal';
+
 interface TripsClientProps {
     reservations: any;
     currentUser?: any;
 }
 
 const TripsClient: React.FC<TripsClientProps> = ({ reservations, currentUser }) => {
+  const { onOpen, onClose, onLoading } = useConfirmModal();
   const [deletingId, setDeletingId] = useState('');
 
   const onCancel = useCallback((id: string) => {
       setDeletingId(id);
+      onLoading();
       axiosClient.delete(`/reservation/delete/${id}`).then(({ data }) => {
           toast.success(data.message);
       })
@@ -26,6 +31,7 @@ const TripsClient: React.FC<TripsClientProps> = ({ reservations, currentUser }) 
           toast.error(error?.message);
       }).finally(() => {
           setDeletingId('');
+          onClose();
       })
   },[])
   return (
@@ -41,7 +47,7 @@ const TripsClient: React.FC<TripsClientProps> = ({ reservations, currentUser }) 
                     data={reservation.listing}
                     reservation={reservation}
                     actionId={reservation.id}
-                    onAction={onCancel}
+                    onAction={(id) => onOpen(() => onCancel(id))}
                     disabled={deletingId === reservation.id}
                     actionLabel='Cancel reservation'
                     currentUser={currentUser}

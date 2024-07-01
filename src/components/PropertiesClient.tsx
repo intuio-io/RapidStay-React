@@ -9,16 +9,21 @@ import Container from './Container'
 import Heading from './Heading'
 import ListingCard from './listings/ListingCard'
 
+// hooks
+import useConfirmModal from '../hooks/useConfirmModal'
+
 interface PropertiesClientProps {
     listings: any;
     currentUser: any;
 }
 
 const PropertiesClient: React.FC<PropertiesClientProps> = ({ listings, currentUser}) => {
+    const { onOpen, onClose, onLoading } = useConfirmModal();
     const [deletingId, setDeletingId] = useState('');
 
     const onCancel = useCallback((id: string) => {
         setDeletingId(id);
+        onLoading();
         axiosClient.delete(`/listing/delete/${id}`).then(({ data }) => {
             toast.success(data.message);
         })
@@ -26,6 +31,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({ listings, currentUs
             toast.error(error?.message);
         }).finally(() => {
             setDeletingId('');
+            onClose();
         })
     },[]);
 
@@ -41,7 +47,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({ listings, currentUs
                     key={listing.id}
                     data={listing}
                     actionId={listing.id}
-                    onAction={onCancel}
+                    onAction={(id) => onOpen(() => onCancel(id))}
                     disabled={deletingId === listing.id}
                     actionLabel='Delete Property'
                     currentUser={currentUser}

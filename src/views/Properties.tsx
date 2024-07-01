@@ -21,16 +21,15 @@ const Properties = () => {
   const loadingTime = Number(import.meta.env.VITE_LOADING_TIME) || 1000;
 
   const fetchDetails = useCallback(async () => {
-    const params = {userId: user.id}
+    const params = {userId: user?.id}
     const data = await getListings({setLoading, params});
     setListings(data);
-  }, [user]);
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user) return;
-
     fetchDetails();
-  }, [user, fetchDetails])
+  }, [user?.email])
 
   useEffect(() => {
     if(!user) return;
@@ -43,7 +42,7 @@ const Properties = () => {
         socket.disconnect();
       }
     }
-  }, [fetchDetails, user]);
+  }, [user?.email]);
 
   useEffect(() => {
     if (!user) return;
@@ -61,7 +60,7 @@ const Properties = () => {
         channel.unsubscribe();
       };
     }
-  }, [fetchDetails, user]);
+  }, [user?.email]);
 
    // just to give the loader a cool effect
     useEffect(() => {

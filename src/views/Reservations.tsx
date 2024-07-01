@@ -25,17 +25,15 @@ const Reservations = () => {
     const params = { authorId: user.id };
     const data = await getReservations({ setResLoading, params });
     setReservations(data);
-  }, [user]);
+  }, [user?.id]);
 
   useEffect(() => {
     if(!user) return;
-
     fetchReservations();
-  }, [user, fetchReservations])
+  }, [user?.email])
 
   useEffect(() => {
-    if (!user) return;
-
+    if(!user) return;
     if (import.meta.env.VITE_SOCKET_TYPE === 'ExpressSocket') {
       const socket = io(import.meta.env.VITE_API_BASE_URL);
       socket.on("reservationsUpdated", () => fetchReservations());
@@ -46,11 +44,10 @@ const Reservations = () => {
         socket.disconnect();
       }
     }
-  }, [user, fetchReservations])
+  }, [user?.email])
 
   useEffect(() => {
-    if (!user) return;
-
+    if(!user) return;
     if (import.meta.env.VITE_SOCKET_TYPE === 'LaravelPusher') {
       const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
         cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
@@ -66,7 +63,7 @@ const Reservations = () => {
         channel.unsubscribe();
       };
     }
-  }, [fetchReservations, user]);
+  }, [user?.email]);
 
 
         // just to give the loader a cool effect

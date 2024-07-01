@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { useCallback, useState, useEffect, useRef } from "react"
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -29,6 +29,16 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
     const loginModal = useLoginModal();
     const rentModal = useRentModal();
     const [isOpen, setIsOpen] = useState(false);
+    let menuRef = useRef<any>();
+
+    useEffect(() => {
+        let handler = (e: any) => {
+            if (!menuRef.current?.contains(e.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handler);
+    }, [isOpen]);
 
     const toggleOpen = useCallback(() => {
         setIsOpen((value) => !value);
@@ -71,7 +81,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
         </div>
 
         {isOpen && (
-            <div className='absolute rounded-xl shadow-md w-[40vw] md:w-3/4 bg-white overflow-hidden right-0 top-12 text-sm'>
+            <div className='absolute rounded-xl shadow-md w-[40vw] md:w-3/4 bg-white overflow-hidden right-0 top-12 text-sm' ref={menuRef}>
                 <div className='flex flex-col cursor-pointer'>
                   { currentUser ? (
                   <>
@@ -80,7 +90,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                       <MenuItem onClick={() => navigate("/favorites")} label="My favorites"/>
                       <MenuItem onClick={() => navigate("/reservations")} label="My reservations"/>
                       <MenuItem onClick={() => navigate("/properties")} label="My properties"/>
-                      <MenuItem onClick={rentModal.onOpen} label="Airbnb my home"/>
+                      <MenuItem onClick={rentModal.onOpen} label="RapidStay my home"/>
                       <hr/>
                       <MenuItem onClick={() => logout()} label="Logout"/>
                   </>

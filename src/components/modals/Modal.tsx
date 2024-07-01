@@ -17,11 +17,12 @@ interface ModalProps {
     disabled?: boolean;
     secondaryAction?: () => void;
     secondaryActionLabel?: string;
+    secondaryHandleClose? : boolean;
 }
 
 
 const Modal: React.FC<ModalProps> = (props) => {
-    const {isOpen, onClose, onSubmit, title, body, footer, actionLabel, disabled, secondaryAction, secondaryActionLabel} = props;
+    const {isOpen, onClose, onSubmit, title, body, footer, actionLabel, disabled, secondaryAction, secondaryActionLabel, secondaryHandleClose} = props;
     const [showModal, setShowModal] = useState(isOpen);
 
     useEffect(() => {
@@ -92,6 +93,16 @@ const Modal: React.FC<ModalProps> = (props) => {
                                     disabled={disabled}
                                     label={secondaryActionLabel}
                                     onClick={handleSecondaryAction}
+                                    />
+                                )
+                            }
+                            {
+                                !secondaryAction && secondaryHandleClose && secondaryActionLabel && (
+                                    <Button
+                                    outline
+                                    disabled={disabled}
+                                    label={secondaryActionLabel}
+                                    onClick={handleClose}
                                     />
                                 )
                             }
