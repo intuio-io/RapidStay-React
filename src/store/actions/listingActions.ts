@@ -33,7 +33,8 @@ interface ListingDetailParams {
             const response = await axiosClient.get(`/listing/${params.listingId}`);
             return response.data;
         } catch (error: any) {
-            toast.error("Error fetching Reservation details");
+            toast.error("Error fetching Property details");
+            return [];
         } finally {
             setListingLoading(false);
         }

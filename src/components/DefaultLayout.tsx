@@ -9,6 +9,8 @@ import SearchModal from "./modals/SearchModal";
 import RegisterModal from "./modals/RegisterModal";
 import LoginModal from "./modals/LoginModal";
 import RentModal from "./modals/RentModal";
+import ConfirmModal from "./modals/ConfirmModal";
+import Footer from "./Footer";
 
 // actions
 import { getCurrentUser } from "../store/actions/authActions";
@@ -42,11 +44,14 @@ const DefaultLayout = () => {
         <RegisterModal/>
         <LoginModal/>
         <RentModal/>
+        <ConfirmModal/>
 
 
-      <div className="pb-20 pt-28">
+      <div className="pt-28 pb-20">
         <Outlet />
       </div>
+
+      <Footer/>
     </div>
   )
 }

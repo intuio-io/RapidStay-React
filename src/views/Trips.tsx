@@ -21,21 +21,19 @@ const Trips = () => {
     const loadingTime = Number(import.meta.env.VITE_LOADING_TIME) || 1000;
 
     const fetchReservations = useCallback(async () => {
-      const params = { userId: user.id };
+      const params = { userId: user?.id };
       const data = await getReservations({ setResLoading, params });
       setReservations(data);
-    }, [user]);
+    }, [user?.id]);
 
     useEffect(() => {
-      if (!user) return;
-
+      if(!user) return;
       fetchReservations();
-    }, [user, fetchReservations]);
+    }, [user?.email]);
 
 
     useEffect(() => {
-      if (!user) return;
-
+      if(!user) return;
       if (import.meta.env.VITE_SOCKET_TYPE === 'ExpressSocket') {
         const socket = io(import.meta.env.VITE_API_BASE_URL);
         socket.on("reservationsDeleted", () => fetchReservations());
@@ -44,12 +42,11 @@ const Trips = () => {
           socket.disconnect();
         }
       }
-    }, [fetchReservations, user])
+    }, [user?.email])
 
 
   useEffect(() => {
-    if (!user) return;
-
+    if(!user) return;
     if (import.meta.env.VITE_SOCKET_TYPE === 'LaravelPusher') {
       const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
         cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
@@ -64,7 +61,7 @@ const Trips = () => {
         channel.unsubscribe();
       };
     }
-  }, [fetchReservations, user]);
+  }, [user?.email]);
 
         // just to give the loader a cool effect
         useEffect(() => {

@@ -20,14 +20,20 @@ const Favorites = () => {
 
   useEffect(() => {
     if(!user) return;
-
     const fetchFavorites = async () => {
         const data = await getFavoriteListings({ setListingLoading })
         setListings(data);
     }
 
     fetchFavorites();
-}, [user])
+}, [user?.email])
+
+  useEffect(() => {
+    if (!user?.favoriteIds) return;
+    const filteredListings = listings.filter(listing => user.favoriteIds.includes(listing.id));
+    setListings(filteredListings);
+  }, [user?.favoriteIds]); 
+
 
     // just to give the loader a cool effect
     useEffect(() => {

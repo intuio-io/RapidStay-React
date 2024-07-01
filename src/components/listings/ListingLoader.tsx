@@ -27,7 +27,11 @@ const ListingLoader: React.FC<ListingLoaderProps> = ({showButton, count = 1}) =>
                  <Skeleton width="60%" />
                  <Skeleton width="40%" />
                  <Skeleton width="80%" />
-                 {showButton && <Skeleton height="30px" width="100%" />}
+                 {showButton && 
+                 <>
+                 <Skeleton width="20%" />
+                 <Skeleton height="30px" width="100%" />
+                 </>}
              </div>
              </div>
          ))}

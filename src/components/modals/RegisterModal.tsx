@@ -41,11 +41,11 @@ const RegisterModal = () => {
 
       const userDetails = await getCurrentUser();
       addUser(userDetails);
-      toast.success('Logged in successfully!');
+      toast.success(response?.data?.message);
       reset();
       registerModal.onClose();
-    } catch (error) {
-      toast.error("Something went wrong, maybe email already exists!");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message);
     } finally {
       setIsLoading(false);
     }
@@ -54,7 +54,7 @@ const RegisterModal = () => {
   const bodyContent = (
     <div className='flex flex-col gap-4'>
       <Heading 
-      title="Welcome to Airbnb" 
+      title="Welcome to RapidStay" 
       subtitle='Create an account!'
        />
 

@@ -38,13 +38,13 @@ function formatText(label: string, count: number) {
             </div>
     </div>
   <div className="px-6 py-4">
-    <div className="font-normal text-xl mb-2">{data?.title}</div>
+    <div className="font-semibold text-xl mb-2">{data?.title}</div>
     <p className="text-slate-500 font-light text-base">
       {data.locationValue?.region} {data.locationValue?.label}, {room}, {guest}, and {bathroom}.
     </p>
 
     <div className='flex flex-row items-center gap-1 mt-2'>
-            <div className='text-lg font-normal'>
+            <div className='text-lg font-semibold'>
              ${data.price}
             </div>
             {!data.reservation && (

@@ -42,11 +42,11 @@ const LoginModal = () => {
   
       const userDetails = await getCurrentUser();
       addUser(userDetails);
-      toast.success('Logged in successfully!');
+      toast.success(response?.data?.message);
       reset();
       loginModal.onClose();
-    } catch (error) {
-      toast.error('Something went wrong');
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message);
     } finally {
       setIsLoading(false);
     }

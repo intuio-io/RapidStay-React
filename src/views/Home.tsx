@@ -37,6 +37,7 @@ import useHomeStore from "../store/homeStore";
     const [showPopup, setShowPopup] = useState(false);
     const [mapBounds, setMapBounds] = useState<any>(null);
     const [listingId, setListingId] = useState<string>("");
+    const [hoveredListingId, setHoveredListingId] = useState<string>("");
     const [currentZoom, setCurrentZoom] = useState<number>(10); 
 
     const mapRef = useRef<any>(null);  
@@ -46,7 +47,7 @@ import useHomeStore from "../store/homeStore";
       const listings = await getListings({setLoading, params});
       setListings(listings);
       setIsEmpty(!(listings.length > 0));
-    }, [user, searchParams]);
+    }, [searchParams]);
 
     useEffect(() => {
       if (location?.latlng) {
@@ -56,19 +57,20 @@ import useHomeStore from "../store/homeStore";
 
     useEffect(() => {
       fetchDetails();
-
-    }, [fetchDetails, searchParams, user])
+    }, [searchParams])
 
     useEffect(() => {
       if (import.meta.env.VITE_SOCKET_TYPE === 'ExpressSocket') {
         const socket = io(import.meta.env.VITE_API_BASE_URL);
         socket.on("listingsUpdated", () => fetchDetails());
+        socket.on("listingsDeleted", () => fetchDetails());
         return () =>  {
           socket.off('listingsUpdated');
+          socket.off('listingsDeleted');
           socket.disconnect();
         }
       }
-    }, [user, fetchDetails]);
+    }, []);
 
 
     useEffect(() => {
@@ -80,13 +82,14 @@ import useHomeStore from "../store/homeStore";
         const channel = pusher.subscribe('listing-channel');
 
         channel.bind('listingsUpdated', () => fetchDetails());
+        channel.bind('listingsDeleted', () => fetchDetails());
   
         return () => {
           channel.unbind_all();
           channel.unsubscribe();
         };
       }
-    }, [user, fetchDetails])
+    }, [])
 
 
         // just to give the loader a cool effect
@@ -112,7 +115,7 @@ import useHomeStore from "../store/homeStore";
         }, [mapBounds, currentZoom]);
 
         if(loading || !isLoadingFinished) {
-            return ( <ListingLoader count={9}/> )
+            return ( <ListingLoader count={12}/> )
           }
         
           if(isEmpty) {
@@ -147,6 +150,7 @@ import useHomeStore from "../store/homeStore";
                         currentUser={user}
                         key={listing.id}
                         data={listing}
+                        hoverAction={setHoveredListingId}
                       />
                     })}
                 </div>
@@ -154,9 +158,9 @@ import useHomeStore from "../store/homeStore";
             </div>
         
          {isLoaded && mapCenter.lat && mapCenter.lng ? (   
-            <div className="fixed top-24 right-0 md:w-2/5 h-screen hidden lg:block">
+             <div className="sticky -mb-20 mt-16 top-[175px] right-0 md:w-2/5 hidden lg:block" style={{ height: `calc(100vh - 175px)` }}>
                 <GoogleMap
-                  mapContainerStyle={{ width: '100%', height: '90vh' }}
+                  mapContainerStyle={{ width: '100%', height: '100%' }}
                   center={mapCenter}
                   zoom={6}
                   onBoundsChanged={handleBoundsChanged}
@@ -178,7 +182,11 @@ import useHomeStore from "../store/homeStore";
                       <ListingMapMenu data={listing} user={user} onClose={handleClosePopup}/>
                    </div>
                     }
-                      <MapMarker isActive={listingId === listing.id} listing={listing} onClick={() => handleMarkerClick(listing)} />
+                      <MapMarker 
+                        isActive={listingId === listing.id || hoveredListingId === listing.id} 
+                        listing={listing} 
+                        onClick={() => handleMarkerClick(listing)} 
+                        />
                   </div>
         
                 </>
